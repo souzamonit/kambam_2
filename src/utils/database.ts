@@ -19,11 +19,12 @@ class DatabaseManager {
 
   private checkEnvironment() {
     // Verificar se estamos em produção e se as variáveis do banco estão configuradas
-    const dbHost = import.meta.env.VITE_DB_HOST || process.env.DB_HOST;
-    const dbPort = import.meta.env.VITE_DB_PORT || process.env.DB_PORT;
-    const dbUser = import.meta.env.VITE_DB_USER || process.env.DB_USER;
-    const dbPassword = import.meta.env.VITE_DB_PASSWORD || process.env.DB_PASSWORD;
-    const dbName = import.meta.env.VITE_DB_NAME || process.env.DB_NAME;
+    // Em Vite, apenas variáveis prefixadas com VITE_ são acessíveis no cliente
+    const dbHost = import.meta.env.VITE_DB_HOST;
+    const dbPort = import.meta.env.VITE_DB_PORT;
+    const dbUser = import.meta.env.VITE_DB_USER;
+    const dbPassword = import.meta.env.VITE_DB_PASSWORD;
+    const dbName = import.meta.env.VITE_DB_NAME;
 
     if (dbHost && dbPort && dbUser && dbPassword && dbName) {
       this.config = {
