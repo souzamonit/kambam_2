@@ -29,7 +29,33 @@ Um sistema web moderno para gerenciamento de solicitações usando metodologia K
 - **Datas**: date-fns com localização pt-BR
 - **Build**: Vite
 
-## 📦 Instalação e Execução
+## 🌐 Deploy em Produção
+
+### Netlify (Atual)
+O sistema está deployado no Netlify como site estático:
+- **URL**: https://remarkable-hamster-304afa.netlify.app
+- **Tipo**: Site estático (sem servidor backend)
+- **Banco**: LocalStorage apenas
+- **HTTPS**: Automático
+- **Porta**: 443 (HTTPS) - gerenciada automaticamente pelo Netlify
+
+### Configurações de Produção
+
+#### Variáveis de Ambiente no Netlify
+Configure no painel do Netlify (Site settings > Environment variables):
+
+```env
+# Apenas variáveis com prefixo VITE_ funcionam no frontend
+VITE_TELEGRAM_BOT_TOKEN=seu_bot_token
+VITE_TELEGRAM_CHAT_ID=seu_chat_id
+```
+
+**IMPORTANTE**: 
+- ❌ `PORT` não é usado no Netlify (sempre 443/80)
+- ❌ `DB_*` não funcionam no frontend
+- ✅ Apenas variáveis `VITE_*` são acessíveis
+
+## 📦 Instalação e Execução Local
 
 ### Pré-requisitos
 - Node.js 18+ 
@@ -48,14 +74,30 @@ cd sistema-kanban
 npm install
 ```
 
-3. **Execute em modo desenvolvimento**
+3. **Configure variáveis de ambiente (opcional)**
+```bash
+cp .env.example .env
+# Edite o arquivo .env conforme necessário
+```
+
+4. **Execute em modo desenvolvimento**
 ```bash
 npm run dev
 ```
 
-4. **Acesse no navegador**
+5. **Acesse no navegador**
 ```
 http://localhost:5173
+```
+
+### Build para Produção
+
+```bash
+# Build da aplicação
+npm run build
+
+# Testar build localmente
+npm run preview
 ```
 
 ### Credenciais Padrão
@@ -87,7 +129,9 @@ src/
 ├── types/              # Definições TypeScript
 │   └── index.ts
 ├── utils/              # Utilitários
-│   └── storage.ts
+│   ├── storage.ts
+│   ├── logger.ts
+│   └── database.ts
 ├── data/               # Dados iniciais
 │   └── initialData.ts
 └── App.tsx             # Componente raiz
@@ -130,8 +174,14 @@ src/
 - **🔄 Em Andamento**: Solicitações sendo trabalhadas
 - **✅ Concluída**: Solicitações finalizadas
 
-## 🗄️ Preparação para Banco de Dados
+## 🗄️ Banco de Dados
 
+### Desenvolvimento (Atual)
+- **Tipo**: LocalStorage
+- **Vantagens**: Sem configuração, funciona offline
+- **Limitações**: Dados locais ao navegador
+
+### Produção (Futuro)
 O sistema está preparado para integração com MariaDB:
 
 1. **Arquivo de Configuração**: `.env.example` com variáveis do banco
@@ -139,7 +189,7 @@ O sistema está preparado para integração com MariaDB:
 3. **Scripts SQL**: Estrutura de tabelas e relacionamentos
 4. **Migração**: Hooks preparados para substituir localStorage
 
-### Configuração do Banco (Produção)
+#### Configuração do Banco (Para Servidor Próprio)
 
 1. Copie `.env.example` para `.env`
 2. Configure as variáveis do MariaDB
@@ -152,6 +202,8 @@ O sistema está preparado para integração com MariaDB:
 - Controle de acesso baseado em roles
 - Preparado para criptografia de senhas (bcrypt)
 - Sanitização de dados de entrada
+- Sistema de auditoria completo
+- Logs detalhados de todas as operações
 
 ## 📱 Responsividade
 
@@ -175,15 +227,51 @@ O sistema está preparado para integração com MariaDB:
 
 ## 🚀 Deploy
 
-### Build para Produção
+### Netlify (Recomendado para Sites Estáticos)
 ```bash
+# Build da aplicação
 npm run build
+
+# Deploy automático via Git ou manual upload da pasta 'dist'
 ```
 
-### Preview da Build
+### Servidor Próprio (Para Funcionalidades Completas)
 ```bash
-npm run preview
+# Instalar PM2
+npm install -g pm2
+
+# Build e iniciar
+npm run build
+pm2 start ecosystem.config.js
 ```
+
+## 📊 Monitoramento
+
+### Logs do Sistema
+- Logs categorizados por operação
+- Diferentes níveis de severidade
+- Exportação em JSON/CSV
+- Filtros avançados
+
+### Auditoria
+- Histórico completo de alterações
+- Rastreamento por usuário
+- Preservação de dados históricos
+
+## 🔧 Configurações Avançadas
+
+### Telegram (Opcional)
+Configure notificações via Telegram:
+
+```env
+VITE_TELEGRAM_BOT_TOKEN=seu_bot_token
+VITE_TELEGRAM_CHAT_ID=seu_chat_id
+```
+
+### Cronômetro de Prazo
+- Definição de prazos para solicitações
+- Cronômetro regressivo em tempo real
+- Alertas visuais de vencimento
 
 ## 🤝 Contribuição
 
@@ -204,6 +292,26 @@ Para dúvidas ou suporte:
 - Consulte a documentação do banco de dados
 - Verifique os logs no console do navegador
 
+## 🔄 Atualizações Recentes
+
+### v1.0.0 (Atual)
+- ✅ Deploy no Netlify funcionando
+- ✅ Sistema de LocalStorage estável
+- ✅ Interface responsiva completa
+- ✅ Sistema de auditoria implementado
+- ✅ Logs detalhados do sistema
+- ✅ Cronômetro de prazo funcional
+- ✅ Notificações Telegram (opcional)
+
+### Próximas Versões
+- 🔄 Integração completa com MariaDB
+- 🔄 API REST para backend
+- 🔄 Autenticação JWT
+- 🔄 Relatórios avançados
+- 🔄 Dashboard analytics expandido
+
 ---
 
 **Sistema Kanban** - Desenvolvido com ❤️ usando React + TypeScript
+
+**Acesse o sistema**: https://remarkable-hamster-304afa.netlify.app

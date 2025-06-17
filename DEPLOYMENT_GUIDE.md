@@ -65,6 +65,7 @@ INSERT INTO contador_protocolo (...);
 
 ### 1. Variáveis de Ambiente
 
+#### Para Desenvolvimento Local (com servidor Node.js)
 Crie um arquivo `.env` na raiz do projeto:
 
 ```env
@@ -76,13 +77,24 @@ DB_PASSWORD=sua_senha_forte
 DB_NAME=kanban_solicitacoes
 
 # Aplicação
-NODE_ENV=production
+NODE_ENV=development
 PORT=3000
 
 # JWT (se implementado)
-JWT_SECRET=sua_chave_secreta_muito_forte_aqui
+JWT_SECRET=sua_chave_secreta_muito_forte
 
 # Telegram (opcional)
+VITE_TELEGRAM_BOT_TOKEN=seu_bot_token
+VITE_TELEGRAM_CHAT_ID=seu_chat_id
+```
+
+#### Para Produção no Netlify
+**IMPORTANTE**: O Netlify é um serviço de hospedagem estática. Ele não executa servidores Node.js nem usa variáveis como `PORT` ou `DB_*`.
+
+No Netlify, configure apenas as variáveis com prefixo `VITE_` nas configurações do site:
+
+```env
+# Apenas estas variáveis funcionam no Netlify:
 VITE_TELEGRAM_BOT_TOKEN=seu_bot_token
 VITE_TELEGRAM_CHAT_ID=seu_chat_id
 ```
@@ -100,37 +112,14 @@ npm run build
 npm run preview
 ```
 
-### 3. Deploy no Servidor
+### 3. Deploy no Netlify
 
-#### Opção A: Servidor Próprio com PM2
+#### Opção A: Deploy Automático via Git
+1. Conecte seu repositório ao Netlify
+2. Configure as variáveis de ambiente no painel do Netlify
+3. O deploy acontece automaticamente a cada push
 
-```bash
-# Instalar PM2 globalmente
-npm install -g pm2
-
-# Criar arquivo ecosystem.config.js
-module.exports = {
-  apps: [{
-    name: 'kanban-system',
-    script: 'npm',
-    args: 'run preview',
-    env: {
-      NODE_ENV: 'production',
-      PORT: 3000
-    }
-  }]
-};
-
-# Iniciar aplicação
-pm2 start ecosystem.config.js
-
-# Configurar para iniciar automaticamente
-pm2 startup
-pm2 save
-```
-
-#### Opção B: Deploy no Netlify (Frontend Only)
-
+#### Opção B: Deploy Manual
 ```bash
 # Build da aplicação
 npm run build
@@ -143,15 +132,61 @@ npm install -g netlify-cli
 netlify deploy --prod --dir=dist
 ```
 
-#### Opção C: Deploy no Vercel
+#### Opção C: Deploy via Bolt (como feito)
+O deploy já foi realizado automaticamente. Acesse:
+- **URL do Site**: https://remarkable-hamster-304afa.netlify.app
+- **Claim URL**: Para transferir para sua conta Netlify
 
-```bash
-# Instalar Vercel CLI
-npm install -g vercel
+## Configurações Específicas do Netlify
 
-# Deploy
-vercel --prod
+### 1. Arquivo netlify.toml (Opcional)
+Crie na raiz do projeto para configurações avançadas:
+
+```toml
+[build]
+  publish = "dist"
+  command = "npm run build"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
 ```
+
+### 2. Variáveis de Ambiente no Netlify
+No painel do Netlify (Site settings > Environment variables):
+
+```
+VITE_TELEGRAM_BOT_TOKEN = seu_bot_token
+VITE_TELEGRAM_CHAT_ID = seu_chat_id
+```
+
+**NOTA IMPORTANTE**: 
+- ❌ `PORT` não é usado no Netlify (sempre 443/80)
+- ❌ `DB_*` não funcionam no frontend (apenas backend)
+- ✅ Apenas variáveis `VITE_*` são acessíveis no cliente
+
+## Diferenças entre Ambientes
+
+### Desenvolvimento Local
+- Usa `npm run dev` (porta configurável via PORT)
+- Pode usar servidor Node.js com banco de dados
+- LocalStorage como fallback
+
+### Produção no Netlify
+- Site estático (sem servidor Node.js)
+- Sempre HTTPS na porta 443
+- Apenas LocalStorage disponível
+- Variáveis `VITE_*` configuradas no painel
+
+### Produção com Servidor Próprio
+- Use PM2 ou similar
+- Configure todas as variáveis de ambiente
+- Banco de dados MariaDB
+- Nginx como proxy reverso
 
 ## Migração de Dados
 
@@ -261,7 +296,7 @@ async function migrate() {
 migrate();
 ```
 
-## Configuração do Nginx (Opcional)
+## Configuração do Nginx (Para Servidor Próprio)
 
 ```nginx
 server {
@@ -308,7 +343,7 @@ mysqldump -u kanban_user -p kanban_solicitacoes > /backups/kanban_$DATE.sql
 find /backups -name "kanban_*.sql" -mtime +7 -delete
 ```
 
-### 2. Monitoramento com PM2
+### 2. Monitoramento com PM2 (Servidor Próprio)
 
 ```bash
 # Ver status
@@ -323,21 +358,51 @@ pm2 web
 
 ## Checklist de Deploy
 
+### Para Netlify (Atual)
+- [x] Build da aplicação realizado
+- [x] Deploy no Netlify concluído
+- [x] Site acessível via HTTPS
+- [x] LocalStorage funcionando
+- [ ] Configurar variáveis VITE_* (se necessário)
+- [ ] Configurar domínio customizado (opcional)
+
+### Para Servidor Próprio (Futuro)
 - [ ] Servidor MariaDB configurado
 - [ ] Banco de dados criado
 - [ ] Scripts SQL executados
 - [ ] Dados migrados do LocalStorage
 - [ ] Variáveis de ambiente configuradas
-- [ ] Build da aplicação realizado
-- [ ] Aplicação deployada
-- [ ] SSL configurado (se aplicável)
+- [ ] Aplicação deployada com PM2
+- [ ] SSL configurado
 - [ ] Backup automático configurado
 - [ ] Monitoramento ativo
-- [ ] Testes de funcionalidade realizados
 
 ## Troubleshooting
 
-### Problemas Comuns
+### Problemas Comuns no Netlify
+
+1. **Site não carrega**
+   - Verificar se o build foi bem-sucedido
+   - Verificar se a pasta `dist` foi gerada
+   - Verificar logs de deploy no painel Netlify
+
+2. **Variáveis de ambiente não funcionam**
+   - Certificar que têm prefixo `VITE_`
+   - Configurar no painel do Netlify, não no arquivo `.env`
+   - Fazer novo deploy após configurar
+
+3. **Rotas não funcionam (404)**
+   - Adicionar arquivo `_redirects` na pasta `public`:
+     ```
+     /*    /index.html   200
+     ```
+
+4. **Funcionalidades não funcionam**
+   - Lembrar que é site estático (sem backend)
+   - Apenas LocalStorage disponível
+   - Sem acesso a banco de dados
+
+### Problemas Comuns em Servidor Próprio
 
 1. **Erro de conexão com banco**
    - Verificar credenciais no .env
@@ -351,10 +416,25 @@ pm2 web
 
 3. **Aplicação não carrega**
    - Verificar logs: `pm2 logs`
-   - Verificar porta disponível
+   - Verificar se porta está disponível
    - Verificar permissões de arquivo
 
 4. **Dados não aparecem**
    - Verificar migração de dados
    - Verificar configuração do banco
    - Verificar logs de erro
+
+## Resumo das Diferenças
+
+| Aspecto | Netlify (Atual) | Servidor Próprio |
+|---------|----------------|------------------|
+| **Tipo** | Site estático | Aplicação full-stack |
+| **Porta** | 443 (HTTPS) automático | Configurável via PORT |
+| **Banco** | LocalStorage apenas | MariaDB + LocalStorage |
+| **Variáveis** | Apenas VITE_* | Todas as variáveis |
+| **Custo** | Gratuito (com limites) | Custo do servidor |
+| **Manutenção** | Mínima | Requer administração |
+| **Escalabilidade** | Automática | Manual |
+| **Backup** | Não necessário | Necessário |
+
+O sistema atual no Netlify está funcionando perfeitamente para um site estático com LocalStorage. A variável PORT não é relevante neste contexto.
