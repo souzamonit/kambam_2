@@ -1,8 +1,7 @@
 module.exports = {
   apps: [{
     name: 'kanban-system',
-    script: 'npm',
-    args: 'run preview',
+    script: 'server.js',
     cwd: './',
     instances: 1,
     autorestart: true,
